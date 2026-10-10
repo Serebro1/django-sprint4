@@ -19,22 +19,26 @@
             </a>
           </li>
           {% if user.is_authenticated %}
-            <div class="btn-group" role="group" aria-label="Basic outlined example">
-              <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
-                  href="{% url 'blog:create_post' %}">Написать пост</a></button>
-              <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
-                  href="{% url 'blog:profile' user.username %}">{{ user.username }}</a></button>
-              <form method="post" action="{% url 'logout' %}" class="d-inline">
+            <div class="d-flex">
+              <a class="btn btn-outline-primary rounded-start rounded-0"
+                href="{% url 'blog:create_post' %}">Написать пост</a>
+
+              <a class="btn btn-outline-primary rounded-0 ms-n1"
+                href="{% url 'blog:profile' user.username %}">{{ user.username }}</a>
+
+              <form method="post" action="{% url 'logout' %}" class="d-flex ms-n1">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-outline-primary">Выйти</button>
+                <button type="submit"
+                        class="btn btn-outline-primary rounded-end rounded-0 ">Выйти</button>
               </form>
             </div>
           {% else %}
-            <div class="btn-group" role="group" aria-label="Basic outlined example">
-              <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
-                  href="{% url 'login' %}">Войти</a></button>
-              <button type="button" class="btn btn-outline-primary"><a class="text-decoration-none text-reset"
-                  href="{% url 'registration' %}">Регистрация</a></button>
+            <div class="d-flex">
+              <a class="btn btn-outline-primary rounded-start rounded-0"
+                href="{% url 'login' %}">Войти</a>
+
+              <a class="btn btn-outline-primary rounded-end rounded-0 ms-n1"
+                href="{% url 'registration' %}">Регистрация</a>
             </div>
           {% endif %}
         </ul>

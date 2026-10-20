@@ -27,14 +27,23 @@ def get_published_posts():
     )
 
 
-def index(request):
-    post_list = get_published_posts().select_related(
-        'category', 'location', 'author'
-    ).annotate(
+def get_posts_with_comments(queryset):
+    return queryset.annotate(
         comment_count=Count('comments')
     ).order_by('-pub_date')
-    paginator = Paginator(post_list, POSTS_PER_PAGE)
-    page_obj = paginator.get_page(request.GET.get('page'))
+
+
+def paginate_posts(request, queryset):
+    paginator = Paginator(queryset, POSTS_PER_PAGE)
+    page_number = request.GET.get('page')
+    return paginator.get_page(page_number)
+
+
+def index(request):
+    post_list = get_posts_with_comments(
+        get_published_posts().select_related('category', 'location', 'author')
+    )
+    page_obj = paginate_posts(request, post_list)
     return render(request, 'blog/index.html', {'page_obj': page_obj})
 
 
@@ -44,14 +53,12 @@ def category_posts(request, category_slug):
         slug=category_slug,
         is_published=True
     )
-    post_list = get_published_posts().filter(
-        category=category
-    ).select_related(
-        'category', 'location', 'author'
-    ).annotate(comment_count=Count('comments')).order_by('-pub_date')
-
-    paginator = Paginator(post_list, POSTS_PER_PAGE)
-    page_obj = paginator.get_page(request.GET.get('page'))
+    post_list = get_posts_with_comments(
+        get_published_posts().filter(category=category).select_related(
+            'category', 'location', 'author'
+        )
+    )
+    page_obj = paginate_posts(request, post_list)
     return render(request, 'blog/category.html', {
         'category': category,
         'page_obj': page_obj,
@@ -65,11 +72,11 @@ def profile(request, username):
         post_list = Post.objects.filter(author=user)
     else:
         post_list = get_published_posts().filter(author=user)
-    post_list = post_list.select_related(
-        'category', 'location', 'author'
-    ).annotate(comment_count=Count('comments')).order_by('-pub_date')
-    paginator = Paginator(post_list, POSTS_PER_PAGE)
-    page_obj = paginator.get_page(request.GET.get('page'))
+
+    post_list = get_posts_with_comments(
+        post_list.select_related('category', 'location', 'author')
+    )
+    page_obj = paginate_posts(request, post_list)
     return render(request, 'blog/profile.html', {
         'profile': user,
         'page_obj': page_obj,
@@ -134,7 +141,8 @@ def post_delete(request, post_id):
     if request.method == 'POST':
         post.delete()
         return redirect('blog:profile', username=request.user.username)
-    return render(request, 'blog/create.html', {'post': post})
+    form = PostForm(instance=post)
+    return render(request, 'blog/create.html', {'form': form})
 
 
 @login_required
@@ -194,15 +202,3 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
             'blog:profile',
             kwargs={'username': self.request.user.username}
         )
-
-
-def csrf_failure(request, reason=''):
-    return render(request, 'pages/403csrf.html', status=403)
-
-
-def page_not_found(request, exception):
-    return render(request, 'pages/404.html', status=404)
-
-
-def server_error(request):
-    return render(request, 'pages/500.html', status=500)

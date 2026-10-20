@@ -28,8 +28,8 @@ urlpatterns = [
     path('pages/', include('pages.urls', namespace='pages')),
 ]
 
-handler404 = 'blog.views.page_not_found'
-handler500 = 'blog.views.server_error'
+handler404 = 'pages.views.page_not_found'
+handler500 = 'pages.views.server_error'
 
 if settings.DEBUG:
     urlpatterns += static(
